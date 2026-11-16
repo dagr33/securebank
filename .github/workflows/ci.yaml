@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   banking-api:
@@ -78,3 +79,16 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
  
+      - name: Login to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker tag securebank-api:ci ghcr.io/dagr33/securebank-api:${{ github.sha }}
+          docker push ghcr.io/dagr33/securebank-api:${{ github.sha }}
